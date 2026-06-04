@@ -453,7 +453,28 @@ symbols: { name: "Symbols & Notation", cards: [
 ["Σ","Summation; or a covariance matrix (by context)"],
 ["ℝⁿ","n-dimensional real space (vectors of n real numbers)"],
 ["∴","Therefore"],
-["n!","Factorial: n × (n-1) × ... × 1"]
+["n!","Factorial: n × (n-1) × ... × 1"],
+["α (alpha)","Learning rate; or a significance level; or a coefficient/weight"],
+["β (beta)","Momentum coefficient; a regression coefficient; or a beta-distribution shape"],
+["γ (gamma)","Discount factor in RL; or the gamma function/distribution; or a focal-loss term"],
+["Γ (capital gamma)","The gamma function (generalizes factorial)"],
+["ε (epsilon)","A tiny constant for stability; a tolerance; or exploration rate (epsilon-greedy)"],
+["η (eta)","Learning rate (step size)"],
+["κ (kappa)","Condition number; or Cohen's kappa agreement; or a kernel"],
+["ν (nu)","Degrees of freedom; or a rate parameter"],
+["ξ (xi)","A slack variable (as in SVMs); or a generic random variable"],
+["π (pi)","The constant 3.14159...; or a policy in reinforcement learning"],
+["Π (capital pi)","Product of a sequence of terms"],
+["ρ (rho)","Correlation coefficient; spectral radius; or a density"],
+["τ (tau)","Temperature (softmax); a time constant; or a threshold"],
+["φ (phi)","A feature map / basis function; an activation; or the golden ratio"],
+["Φ (capital phi)","The standard normal CDF; or a potential function"],
+["χ (chi)","Used in the chi-squared statistic / distribution"],
+["ψ (psi)","A generic function (e.g., digamma); context-dependent"],
+["ω (omega)","Angular frequency; or model weights"],
+["Ω (capital omega)","Asymptotic lower bound (big-Omega); or the sample space"],
+["Θ (capital theta)","Asymptotic tight bound (big-Theta); or the full parameter set"],
+["Λ (capital lambda)","Diagonal matrix of eigenvalues"]
 ]},
 dist: { name: "Distances & Similarity", cards: [
 ["What does Euclidean (L2) distance measure?","Straight-line distance: the root of summed squared differences"],
@@ -576,6 +597,73 @@ attn: { name: "Attention & Transformers", cards: [
 ["What does an encoder-only model (e.g., BERT) do?","Builds bidirectional representations, good for understanding tasks"],
 ["What does a decoder-only model (e.g., GPT) do?","Autoregressively predicts the next token using causal attention"],
 ["What does KV-caching speed up?","Generation: stored keys/values for past tokens avoid recomputation"]
+]},
+algo: { name: "Algorithms & Big-O", cards: [
+["What does Big-O notation describe?","An upper bound on how runtime or space grows with input size n"],
+["What does O(1) mean?","Constant time: runtime independent of input size"],
+["What does O(log n) mean?","Logarithmic: time grows slowly, halving the problem each step (binary search)"],
+["What does O(n) mean?","Linear: time grows proportionally with input size"],
+["What does O(n log n) mean?","Linearithmic: efficient comparison sorts (merge, heap, average quicksort)"],
+["What does O(n^2) mean?","Quadratic: nested loops over the input; doubling n quadruples the work"],
+["What does O(2^n) mean?","Exponential: doubling with each added element; intractable beyond small n"],
+["What does O(n!) mean?","Factorial: brute-force permutations; explodes almost immediately"],
+["What does Big-Omega describe?","A lower bound on growth (a best-case floor)"],
+["What does Big-Theta describe?","A tight bound: growth is this rate both above and below"],
+["Time vs space complexity?","Time bounds operations; space bounds memory, both as functions of n"],
+["What is amortized complexity?","Average cost per operation over a sequence, even if some single ops are costly"],
+["Binary search complexity?","O(log n) on a sorted array"],
+["Merge sort complexity?","O(n log n) time, O(n) extra space; stable"],
+["Quicksort complexity?","O(n log n) average, O(n^2) worst case; in-place"],
+["Hash-table lookup complexity?","O(1) average, O(n) worst case under collisions"],
+["Naive matrix multiplication complexity?","O(n^3) for two n-by-n matrices"],
+["What does a greedy algorithm do?","Takes the locally best choice at each step, hoping for a global optimum"],
+["What is dynamic programming?","Solve overlapping subproblems once and reuse results (memoization or tables)"],
+["What is divide and conquer?","Split into subproblems, solve recursively, then combine (e.g., merge sort)"],
+["BFS / DFS complexity on a graph?","O(V + E): vertices plus edges"],
+["Dijkstra's complexity (with a heap)?","O((V + E) log V)"],
+["What does NP-hard mean, intuitively?","At least as hard as the hardest problems in NP; no known polynomial solution"],
+["What does NP-complete mean?","In NP and NP-hard: quickly verifiable, but no known fast solution"],
+["Difference between P and NP?","P: solvable in polynomial time; NP: solutions verifiable in polynomial time"],
+["What does memoization do?","Caches results to avoid recomputing the same inputs"],
+["What is a recurrence relation?","An equation giving a problem's cost in terms of smaller instances"],
+["What does the Master Theorem solve?","Complexity of divide-and-conquer recurrences T(n) = a T(n/b) + f(n)"],
+["Why does Big-O drop constants and lower-order terms?","It describes asymptotic growth; for large n only the dominant rate matters"],
+["Complexity of self-attention in sequence length?","O(n^2): every token attends to every other"],
+["What is the space-time tradeoff?","Spending memory (caching, tables) to cut computation time, or vice versa"]
+]},
+ai: { name: "AI & Agentic Terms", cards: [
+["What is a large language model (LLM)?","A neural net trained to predict text, capable of broad language tasks"],
+["What is a token?","The basic unit an LLM reads and generates (a word piece or character chunk)"],
+["What is the context window?","The maximum number of tokens a model can attend to at once"],
+["What is pretraining?","Learning general patterns from large unlabeled data before task-specific tuning"],
+["What is fine-tuning?","Further training a pretrained model on a narrower, task-specific dataset"],
+["What is RLHF?","Reinforcement Learning from Human Feedback: aligning a model to human preferences"],
+["What is a reward model?","A model trained to score outputs by predicted human preference"],
+["What is in-context learning?","Learning a task from examples in the prompt, with no weight updates"],
+["What is few-shot prompting?","Including a few worked examples in the prompt to guide the output"],
+["What is zero-shot?","Performing a task from instructions alone, with no examples"],
+["What is chain-of-thought?","Prompting the model to reason step by step before answering"],
+["What is an AI agent?","A system that uses a model to plan and take actions toward a goal, in a loop"],
+["What is tool use (function calling)?","Letting a model invoke external tools/APIs and use the results"],
+["What is the ReAct pattern?","Interleaving Reasoning and Acting: think, act, observe, repeat"],
+["What is RAG?","Retrieval-augmented generation: fetch relevant documents and condition on them"],
+["What is a vector database?","A store that indexes embeddings for fast nearest-neighbor retrieval"],
+["What is grounding?","Tying model outputs to verifiable external sources or state"],
+["What is a hallucination?","A confident but false or fabricated model output"],
+["What is alignment?","Making a model's behavior match human intentions and values"],
+["What is a system prompt?","Persistent instructions that set a model's role and constraints"],
+["What is top-k / top-p sampling?","Drawing the next token from only the most likely candidates"],
+["What is a scratchpad for agents?","Intermediate notes a model writes to track state across steps"],
+["What is multi-agent orchestration?","Coordinating several specialized agents to solve a larger task"],
+["What is a planner in an agent?","The component that breaks a goal into ordered steps or subtasks"],
+["What does autonomy mean for an agent?","How much it acts without human approval between steps"],
+["What is a guardrail?","A constraint or check that keeps model behavior within safe bounds"],
+["What is distillation?","Training a smaller model to mimic a larger one's behavior"],
+["What is quantization?","Reducing the numeric precision of weights to shrink and speed up a model"],
+["What is a mixture of experts (MoE)?","A model that routes each input to a few specialized sub-networks"],
+["What is an agent loop?","Observe, decide with the model, act, feed results back, and repeat"],
+["What is agent memory?","Persistent external storage the agent reads and writes across steps or sessions"],
+["What is a context / token budget?","The limited token space shared by prompt, history, and output"]
 ]}
 };
 
@@ -819,7 +907,7 @@ function loadLast(){
   $("last-acc").textContent = last.acc+"%";
 }
 
-const DECK_COLORS = {la:"#5b9cff", calc:"#3ecf8e", prob:"#e0b341", mcalc:"#c98bff", curves:"#ff8f5b", symbols:"#4fd0d6", dist:"#ff6fae", info:"#9ccc65", decomp:"#ec80ff", attn:"#ffb454"};
+const DECK_COLORS = {la:"#5b9cff", calc:"#3ecf8e", prob:"#e0b341", mcalc:"#c98bff", curves:"#ff8f5b", symbols:"#4fd0d6", dist:"#ff6fae", info:"#9ccc65", decomp:"#ec80ff", attn:"#ffb454", algo:"#2dd4bf", ai:"#fb7185"};
 let histFilter = "all";
 function setHistFilter(f){ histFilter = f; drawHistory(); }
 function drawHistory(){
