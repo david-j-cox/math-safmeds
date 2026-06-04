@@ -454,6 +454,128 @@ symbols: { name: "Symbols & Notation", cards: [
 ["ℝⁿ","n-dimensional real space (vectors of n real numbers)"],
 ["∴","Therefore"],
 ["n!","Factorial: n × (n-1) × ... × 1"]
+]},
+dist: { name: "Distances & Similarity", cards: [
+["What does Euclidean (L2) distance measure?","Straight-line distance: the root of summed squared differences"],
+["What does Manhattan (L1) distance measure?","Distance along axes: the sum of absolute coordinate differences (city-block)"],
+["When does L1 differ most from L2?","When differences spread across many dimensions; L1 doesn't square-amplify large gaps"],
+["What does cosine similarity measure?","The angle between two vectors: orientation, ignoring magnitude"],
+["What does a cosine similarity of 1 mean?","The vectors point the same direction (angle 0)"],
+["What does a cosine similarity of 0 mean?","The vectors are orthogonal (unrelated in direction)"],
+["When prefer cosine over Euclidean?","When magnitude shouldn't matter, only direction (e.g., embedding similarity)"],
+["What does the dot product capture as similarity?","Alignment scaled by both magnitudes (cosine times the two lengths)"],
+["How does cosine relate to the dot product?","Cosine is the dot product of the unit-normalized vectors"],
+["What does Mahalanobis distance account for?","Correlations and scale: distance in standard-deviations along the data's axes"],
+["When use Mahalanobis over Euclidean?","When features are correlated or on very different scales"],
+["What does Mahalanobis reduce to with identity covariance?","Plain Euclidean distance"],
+["What does Jaccard similarity measure?","Set overlap: intersection size divided by union size"],
+["When is Jaccard useful?","Comparing sets or binary features (shared items versus total)"],
+["What does Hamming distance count?","The number of positions where two equal-length strings differ"],
+["What does edit (Levenshtein) distance measure?","Minimum insertions, deletions, substitutions to turn one string into another"],
+["Why is KL divergence not a true distance?","It is asymmetric and violates the triangle inequality"],
+["What does the Lp norm generalize?","A family of lengths: p=1 Manhattan, p=2 Euclidean, p=inf the max coordinate"],
+["What does L-infinity (Chebyshev) distance measure?","The largest single-coordinate difference"],
+["What is a metric, formally?","A distance that is non-negative, symmetric, zero only for identical points, and obeys the triangle inequality"],
+["What does the triangle inequality say?","A direct path is never longer than a detour: d(a,c) <= d(a,b) + d(b,c)"],
+["What does squared Euclidean distance trade off?","Drops the square root (cheaper, smooth gradient) but is no longer a true metric"],
+["Why normalize embeddings before cosine?","So similarity depends only on direction, not on vector length"],
+["What does a Gaussian (RBF) kernel turn distance into?","A similarity that decays smoothly with squared distance (1 when identical)"],
+["What similarity does dot-product attention use?","The scaled dot product between query and key vectors"],
+["What does Wasserstein (earth-mover) distance measure?","The minimum work to morph one distribution into another"],
+["Why does Euclidean distance break down in high dimensions?","Distances concentrate: points all look nearly equidistant (curse of dimensionality)"],
+["How does cross-entropy relate to KL?","Cross-entropy is the entropy of the truth plus the KL from truth to prediction"],
+["What does correlation distance measure?","1 minus correlation: closeness in linear co-movement, ignoring scale and offset"],
+["What is the cosine distance (vs similarity)?","1 minus cosine similarity, so identical direction gives distance 0"]
+]},
+info: { name: "Information Theory", cards: [
+["What does the information content of an event measure?","Its surprise: -log(probability); rarer events carry more information"],
+["What is the unit of information with log base 2?","Bits"],
+["What is the unit of information with natural log?","Nats"],
+["What is entropy?","The average surprise of a distribution: the expected value of -log p"],
+["When is entropy maximized?","When all outcomes are equally likely (uniform)"],
+["When is entropy zero?","When one outcome is certain (no surprise at all)"],
+["What does cross-entropy measure?","Average bits to encode data from p using a code built for q"],
+["How does cross-entropy decompose?","Entropy of p plus the KL divergence from p to q"],
+["What does KL divergence measure?","The extra bits from using q instead of the true p (relative entropy)"],
+["Is KL divergence symmetric?","No: KL(p||q) generally differs from KL(q||p)"],
+["What is mutual information?","How much knowing one variable reduces uncertainty about another"],
+["What does mutual information of 0 mean?","The two variables are independent"],
+["What is mutual information in terms of entropy?","H(X) + H(Y) - H(X,Y), equivalently H(X) - H(X|Y)"],
+["What is conditional entropy H(X|Y)?","The uncertainty left about X once Y is known"],
+["What is joint entropy?","The total uncertainty in two variables considered together"],
+["What does the chain rule of entropy say?","H(X,Y) = H(X) + H(Y|X)"],
+["What is perplexity?","The exponential of entropy: an effective number of equally-likely choices"],
+["Why do language models report perplexity?","It is exp(cross-entropy); lower means the model is less surprised by the text"],
+["What does minimizing cross-entropy loss do?","Pushes predicted probabilities toward the truth (minimizes KL to the data)"],
+["What does the source coding theorem say?","Entropy is the minimum average code length to compress a source losslessly"],
+["What does channel capacity bound?","The maximum reliable information rate through a noisy channel"],
+["What does the data processing inequality say?","Processing can't create information: I(X;Z) <= I(X;Y) along X->Y->Z"],
+["Why use log probabilities in practice?","They turn products into sums and avoid numerical underflow"],
+["What does a high-entropy prediction indicate?","The model is uncertain and spreads probability widely"],
+["What does information gain measure in a decision tree?","The drop in entropy achieved by splitting on a feature"],
+["How are compression and prediction related?","A better predictor enables better compression (lower cross-entropy)"],
+["What does the entropy of a Gaussian depend on?","Only its variance (wider is higher entropy), not its mean"],
+["What does maximizing mutual information encourage in representation learning?","Representations that keep as much information about the input or target as possible"]
+]},
+decomp: { name: "Matrix Decompositions", cards: [
+["What does LU decomposition factor a matrix into?","A lower-triangular L times an upper-triangular U"],
+["What is LU decomposition used for?","Efficiently solving linear systems and computing determinants"],
+["What does QR decomposition factor a matrix into?","An orthogonal Q times an upper-triangular R"],
+["What is QR decomposition used for?","Least-squares solving and as a step inside eigenvalue algorithms"],
+["What does Q represent in QR?","An orthonormal basis for the matrix's column space"],
+["What does Cholesky decomposition factor?","A symmetric positive-definite matrix into L times L-transpose"],
+["When can you use Cholesky?","Only for symmetric positive-definite matrices (the fast, stable choice there)"],
+["What does eigendecomposition factor a matrix into?","Q (eigenvectors) times Lambda (diagonal eigenvalues) times Q-inverse"],
+["Which matrices are diagonalizable?","Those with a full set of linearly independent eigenvectors"],
+["What does eigendecomposition become for a symmetric matrix?","Q Lambda Q-transpose with orthonormal eigenvectors (the spectral theorem)"],
+["What does the SVD factor ANY matrix into?","U Sigma V-transpose: rotate, then scale, then rotate"],
+["What do U and V hold in the SVD?","Orthonormal output (left) and input (right) singular directions"],
+["What does Sigma hold in the SVD?","The singular values: non-negative stretch factors in decreasing order"],
+["How do singular values relate to eigenvalues?","They are the square roots of the eigenvalues of A-transpose A"],
+["What is a low-rank approximation?","Keeping only the top-k singular values and vectors to best approximate a matrix"],
+["What does the Eckart-Young theorem say?","Truncated SVD gives the best possible rank-k approximation"],
+["How does PCA relate to the SVD?","PCA is the SVD (or eigendecomposition) of the centered data's covariance"],
+["What is the pseudo-inverse used for?","Least squares and inverting non-square or singular matrices"],
+["How is the pseudo-inverse built from the SVD?","V times Sigma-inverse times U-transpose (inverting the nonzero singular values)"],
+["What does the condition number (from the SVD) tell you?","Largest over smallest singular value: how sensitive solving is to noise"],
+["What does a zero singular value indicate?","Rank deficiency: the matrix collapses a direction"],
+["Why is the SVD preferred over eigendecomposition numerically?","It always exists, works for any matrix, and is more stable"],
+["What does NMF (non-negative matrix factorization) give?","Parts-based factors with all-non-negative, often interpretable, entries"],
+["What does the spectral theorem guarantee?","Symmetric matrices have real eigenvalues and orthogonal eigenvectors"],
+["What are trace and determinant in terms of eigenvalues?","Trace is their sum; determinant is their product"],
+["What does whitening use a decomposition for?","To transform data to identity covariance (decorrelated, unit variance)"]
+]},
+attn: { name: "Attention & Transformers", cards: [
+["What are Q, K, V in attention?","Query (what I seek), Key (what I offer), Value (the content returned)"],
+["What does attention compute?","A weighted average of values, weighted by query-key similarity"],
+["What is the attention score before softmax?","The scaled dot product of a query with each key"],
+["Why scale scores by 1/sqrt(d_k)?","Large dot products saturate softmax; scaling keeps gradients healthy"],
+["What does softmax do in attention?","Turns the scores into weights that sum to 1 across the keys"],
+["What is self-attention?","Q, K, V all come from the same sequence; tokens attend to one another"],
+["What is cross-attention?","Queries from one sequence attend to keys and values from another"],
+["What is multi-head attention?","Several attentions in parallel, each in a different subspace, then concatenated"],
+["Why use multiple heads?","To attend to different relationships and positions at once"],
+["What problem does positional encoding solve?","Attention is order-agnostic; it injects token-position information"],
+["What do sinusoidal positional encodings provide?","Position info via sines and cosines of varying frequency, added to embeddings"],
+["What is causal (masked) attention?","Each token may attend only to earlier positions, never future ones"],
+["Why mask attention in a decoder?","To stop a position from seeing future tokens during autoregressive generation"],
+["What does a residual (skip) connection do?","Adds a sublayer's input to its output, easing gradient flow"],
+["What does layer normalization do?","Normalizes activations across features per token, stabilizing training"],
+["What is the feed-forward block in a transformer?","A per-token MLP: expand, nonlinearity, project back"],
+["What is the residual stream?","The running sum each layer reads from and writes back into"],
+["What does the Q times K-transpose product produce?","An attention matrix: every query's similarity to every key"],
+["What is the shape of the attention matrix?","Sequence length by sequence length (each token versus each token)"],
+["Why is self-attention quadratic in sequence length?","Every token compares with every other, giving N-by-N scores"],
+["What might a single attention head specialize in?","A specific relation, like previous-token, syntax, or coreference"],
+["What does the value vector carry?","The actual information passed forward once attention sets the weights"],
+["What does the output projection (W_O) do?","Mixes the concatenated heads back into the model dimension"],
+["What is an embedding?","A learned dense vector representing a token in a continuous space"],
+["What does the unembedding / output head do?","Maps the final hidden vector to logits over the vocabulary"],
+["What does temperature do at generation time?","Scales logits before softmax: low is sharp/greedy, high is diverse/random"],
+["What is pre-norm versus post-norm?","Whether LayerNorm comes before or after the sublayer; pre-norm trains more stably"],
+["What does an encoder-only model (e.g., BERT) do?","Builds bidirectional representations, good for understanding tasks"],
+["What does a decoder-only model (e.g., GPT) do?","Autoregressively predicts the next token using causal attention"],
+["What does KV-caching speed up?","Generation: stored keys/values for past tokens avoid recomputation"]
 ]}
 };
 
@@ -466,19 +588,28 @@ let mEndAt = 0, mTicker = null, mTimeout = null;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 
-// build deck picker
+// build deck picker (sorted by least-recently-practiced first, with recency tags)
 const dp = $("deckpick");
-Object.keys(DECKS).forEach((id,i)=>{
-  const b = document.createElement("button");
-  b.className = "chip" + (i===0 ? " sel" : "");
-  b.dataset.deck = id;
-  b.textContent = DECKS[id].name + " (" + DECKS[id].cards.length + ")";
-  dp.appendChild(b);
-});
+function lastPracticed(id){ try { const h = JSON.parse(localStorage.getItem(keyFor(id)))||[]; return h.length ? Math.max(...h.map(s=>s.t)) : 0; } catch(e){ return 0; } }
+function recencyLabel(t){ if(!t) return "new"; const d = Math.floor((Date.now()-t)/86400000); return d<=0 ? "today" : d+"d ago"; }
+function buildDeckPicker(autoselect){
+  const ids = Object.keys(DECKS).sort((a,b)=> lastPracticed(a)-lastPracticed(b));
+  if(autoselect || !ids.includes(deckId)) deckId = ids[0];
+  dp.innerHTML = "";
+  ids.forEach(id=>{
+    const b = document.createElement("button");
+    b.className = "chip" + (id===deckId ? " sel" : "");
+    b.dataset.deck = id;
+    b.innerHTML = `${DECKS[id].name} <span style="color:var(--dim)">&middot; ${DECKS[id].cards.length} &middot; ${recencyLabel(lastPracticed(id))}</span>`;
+    dp.appendChild(b);
+  });
+  loadLast();
+}
 dp.addEventListener("click", e=>{
-  const id = e.target.dataset.deck; if(!id) return;
+  const btn = e.target.closest("button"); if(!btn) return;
+  const id = btn.dataset.deck; if(!id) return;
   deckId = id;
-  [...dp.children].forEach(c=>c.classList.toggle("sel", c===e.target));
+  [...dp.children].forEach(c=>c.classList.toggle("sel", c===btn));
   loadLast();
 });
 
@@ -503,7 +634,7 @@ function show(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   $(id).classList.add("active");
   if(id==="history") drawHistory();
-  if(id==="home") loadLast();
+  if(id==="home") buildDeckPicker(false);
 }
 
 function shuffle(a){
@@ -688,7 +819,7 @@ function loadLast(){
   $("last-acc").textContent = last.acc+"%";
 }
 
-const DECK_COLORS = {la:"#5b9cff", calc:"#3ecf8e", prob:"#e0b341", mcalc:"#c98bff", curves:"#ff8f5b", symbols:"#4fd0d6"};
+const DECK_COLORS = {la:"#5b9cff", calc:"#3ecf8e", prob:"#e0b341", mcalc:"#c98bff", curves:"#ff8f5b", symbols:"#4fd0d6", dist:"#ff6fae", info:"#9ccc65", decomp:"#ec80ff", attn:"#ffb454"};
 let histFilter = "all";
 function setHistFilter(f){ histFilter = f; drawHistory(); }
 function drawHistory(){
@@ -757,7 +888,7 @@ function drawHistory(){
   $("hist-summary").textContent = `${all.length} sessions ${scope}  -  best ${best} corrects/min`;
 }
 
-loadLast();
+buildDeckPicker(true);
 </script>
 </body>
 </html>
