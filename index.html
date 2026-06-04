@@ -141,12 +141,12 @@
   <!-- MATCH (multiple choice) -->
   <section id="match" class="screen">
     <div class="timerbar">
-      <div class="counts" id="mcount">1 / 15</div>
-      <div class="counts">score <b class="c" id="mscore">0</b></div>
+      <div class="timer" id="mtimer">1:00</div>
+      <div class="counts">correct <b class="c" id="mscore">0</b> &nbsp; miss <b class="e" id="merr">0</b></div>
     </div>
     <div class="sample" id="sample">...</div>
     <div class="options" id="options"></div>
-    <div class="flip-hint">Pick the match. Untimed - this is for learning, not charted.</div>
+    <div class="flip-hint">Pick the match as fast as you can. Charted as rings.</div>
   </section>
 
   <!-- RESULTS -->
@@ -461,7 +461,8 @@ symbols: { name: "Symbols & Notation", cards: [
 let deckId = "la", dur = 60, dir = "fb", mode = "flash";
 let cards = [], order = [], idx = 0, correct = 0, errors = 0, flipped = false;
 let endAt = 0, ticker = null;
-let trials = [], matchIdx = 0, matchScore = 0, matchLocked = false;
+let mOrder = [], mIdx = 0, matchScore = 0, matchErrors = 0, matchLocked = false, matchOver = false;
+let mEndAt = 0, mTicker = null, mTimeout = null;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 
@@ -485,8 +486,6 @@ $("modepick").addEventListener("click", e=>{
   const m = e.target.dataset.mode; if(!m) return;
   mode = m;
   [...$("modepick").children].forEach(c=>c.classList.toggle("sel", c===e.target));
-  $("durwrap").style.display = mode==="flash" ? "" : "none";
-  $("startbtn").textContent = mode==="flash" ? "Start timing" : "Start match round";
 });
 
 $("durpick").addEventListener("click", e=>{
@@ -589,25 +588,34 @@ function finishFlash(){
   $("res-epm").textContent = epm;
   $("res-acc").textContent = acc+"%";
   $("res-seen").textContent = seen;
-  saveSession({t: Date.now(), cpm, epm, acc, dur, dir});
+  saveSession({t: Date.now(), cpm, epm, acc, dur, dir, mode:"flash"});
   show("results");
 }
 
 // =================== Match-to-sample mode ===================
 function startMatch(){
   cards = DECKS[deckId].cards;
-  const N = Math.min(15, cards.length);
-  trials = shuffle(cards.map((_,i)=>i)).slice(0, N);
-  matchIdx = 0; matchScore = 0; matchLocked = false;
-  $("mscore").textContent = 0;
+  mOrder = shuffle(cards.map((_,i)=>i));
+  mIdx = 0; matchScore = 0; matchErrors = 0; matchLocked = false; matchOver = false;
+  $("mscore").textContent = 0; $("merr").textContent = 0;
   show("match");
   renderTrial();
+  mEndAt = Date.now() + dur*1000;
+  tickMatch();
+  clearInterval(mTicker);
+  mTicker = setInterval(tickMatch, 200);
+}
+function tickMatch(){
+  const left = Math.max(0, mEndAt - Date.now());
+  const s = Math.ceil(left/1000);
+  $("mtimer").textContent = Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+  if(left<=0){ clearInterval(mTicker); clearTimeout(mTimeout); finishMatch(); }
 }
 function renderTrial(){
-  const correctIdx = trials[matchIdx];
+  if(mIdx >= mOrder.length){ mOrder = shuffle(mOrder); mIdx = 0; }
+  const correctIdx = mOrder[mIdx];
   const card = cards[correctIdx];
   $("sample").innerHTML = sampleHTML(card);
-  $("mcount").textContent = (matchIdx+1) + " / " + trials.length;
   const pool = shuffle(cards.map((_,i)=>i).filter(i=>i!==correctIdx)).slice(0,3);
   const opts = shuffle([correctIdx, ...pool]);
   const box = $("options"); box.innerHTML = "";
@@ -622,32 +630,39 @@ function renderTrial(){
   matchLocked = false;
 }
 function choose(btn){
-  if(matchLocked) return;
+  if(matchLocked || matchOver) return;
   matchLocked = true;
   const ok = btn.dataset.correct === "1";
   [...$("options").children].forEach(b=>{
     if(b.dataset.correct==="1") b.classList.add("right");
     else b.classList.add("dim");
   });
-  if(ok){ matchScore++; }
-  else { btn.classList.remove("dim"); btn.classList.add("wrong"); }
-  $("mscore").textContent = matchScore;
-  setTimeout(()=>{
-    matchIdx++;
-    if(matchIdx >= trials.length) finishMatch();
-    else renderTrial();
-  }, ok ? 650 : 1300);
+  if(ok){ matchScore++; $("mscore").textContent = matchScore; }
+  else { btn.classList.remove("dim"); btn.classList.add("wrong"); matchErrors++; $("merr").textContent = matchErrors; }
+  clearTimeout(mTimeout);
+  mTimeout = setTimeout(()=>{
+    if(matchOver) return;
+    mIdx++;
+    renderTrial();
+  }, ok ? 400 : 850);
 }
 function finishMatch(){
-  const N = trials.length, score = matchScore;
-  const acc = N ? Math.round(100*score/N) : 0;
+  if(matchOver) return;
+  matchOver = true;
+  clearInterval(mTicker); clearTimeout(mTimeout);
+  const mins = dur/60;
+  const cpm = +(matchScore/mins).toFixed(1);
+  const epm = +(matchErrors/mins).toFixed(1);
+  const seen = matchScore + matchErrors;
+  const acc = seen ? Math.round(100*matchScore/seen) : 0;
   $("res-title").textContent = "Match round complete";
-  setResultLabels("percent correct","got right","trials","missed");
-  $("res-aim").textContent = "Match-to-sample practice (not charted). Switch to Flashcards to build fluency.";
-  $("res-cpm").textContent = acc+"%";
-  $("res-epm").textContent = score;
-  $("res-acc").textContent = N;
-  $("res-seen").textContent = N - score;
+  setResultLabels("corrects per minute","errors / min","accuracy","trials done");
+  $("res-aim").textContent = "Match-to-sample (timed). Charted as rings; flashcards are solid dots.";
+  $("res-cpm").textContent = cpm;
+  $("res-epm").textContent = epm;
+  $("res-acc").textContent = acc+"%";
+  $("res-seen").textContent = seen;
+  saveSession({t: Date.now(), cpm, epm, acc, dur, dir, mode:"match"});
   show("results");
 }
 
@@ -666,7 +681,7 @@ function saveSession(s){ const h = getHistory(); h.push(s); localStorage.setItem
 function clearHistory(){ if(confirm("Clear ALL flashcard history across every deck?")){ Object.keys(DECKS).forEach(id=>localStorage.removeItem(keyFor(id))); drawHistory(); loadLast(); } }
 
 function loadLast(){
-  const h = getHistory();
+  const h = getHistory().filter(s => (s.mode||"flash")==="flash");
   if(!h.length){ $("last-correct").textContent="-"; $("last-acc").textContent="-"; return; }
   const last = h[h.length-1];
   $("last-correct").textContent = last.cpm;
@@ -681,7 +696,7 @@ function drawHistory(){
   let allRaw = [];
   Object.keys(DECKS).forEach(id=>{
     let h; try { h = JSON.parse(localStorage.getItem(keyFor(id))) || []; } catch(e){ h = []; }
-    h.forEach(s=> allRaw.push({t:s.t, cpm:s.cpm, epm:s.epm, deck:id}));
+    h.forEach(s=> allRaw.push({t:s.t, cpm:s.cpm, epm:s.epm, deck:id, mode:s.mode||"flash"}));
   });
   const present = Object.keys(DECKS).filter(id => allRaw.some(s=>s.deck===id));
   if(histFilter!=="all" && !present.includes(histFilter)) histFilter = "all";
@@ -725,14 +740,18 @@ function drawHistory(){
   all.forEach(s=>{
     const c = DECK_COLORS[s.deck]||'#5b9cff';
     const x = sx(dayOf(s.t));
-    if(s.cpm>0){ pts += `<circle cx="${x.toFixed(1)}" cy="${sy(s.cpm).toFixed(1)}" r="3.2" fill="${c}"/>`; }
+    if(s.cpm>0){ const y=sy(s.cpm).toFixed(1);
+      pts += s.mode==="match"
+        ? `<circle cx="${x.toFixed(1)}" cy="${y}" r="3.4" fill="none" stroke="${c}" stroke-width="1.6"/>`
+        : `<circle cx="${x.toFixed(1)}" cy="${y}" r="3.2" fill="${c}"/>`;
+    }
     if(s.epm>0){ const y=sy(s.epm); pts += `<path d="M${(x-3).toFixed(1)} ${(y-3).toFixed(1)} l6 6 M${(x+3).toFixed(1)} ${(y-3).toFixed(1)} l-6 6" stroke="${c}" stroke-width="1.5" fill="none"/>`; }
   });
   svg.innerHTML = g + pts;
   const legendDecks = histFilter==="all" ? present : [histFilter];
   $("hist-legend").innerHTML = legendDecks.map(id=>
     `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--dim);margin-right:4px"><span style="width:10px;height:10px;border-radius:50%;background:${DECK_COLORS[id]||'#5b9cff'};display:inline-block"></span>${DECKS[id].name}</span>`
-  ).join("") + `<span style="font-size:12px;color:var(--dim)">dot = corrects, &times; = errors</span>`;
+  ).join("") + `<span style="font-size:12px;color:var(--dim)">solid = flashcards, ring = match, &times; = errors</span>`;
   const best = Math.max(...all.map(s=>s.cpm||0));
   const scope = histFilter==="all" ? `across ${present.length} deck(s)` : `(${DECKS[histFilter].name})`;
   $("hist-summary").textContent = `${all.length} sessions ${scope}  -  best ${best} corrects/min`;
