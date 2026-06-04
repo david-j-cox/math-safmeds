@@ -56,6 +56,15 @@
   .mark-row button { flex: 1; padding: 20px; font-size: 18px; font-weight: 600; color: #fff; }
   .miss { background: var(--bad); } .got { background: var(--good); }
   .flip-hint { text-align: center; color: var(--dim); font-size: 13px; margin-top: 12px; }
+  /* match-to-sample */
+  .sample { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 22px; text-align: center; font-size: 21px; font-weight: 600; min-height: 130px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+  .sample svg { width: 100%; max-width: 280px; height: auto; background: transparent; }
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .opt { background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 16px; font-size: 16px; min-height: 70px; text-align: center; display: flex; align-items: center; justify-content: center; line-height: 1.3; }
+  .opt svg { width: 100%; max-width: 130px; height: auto; background: transparent; }
+  .opt.right { background: rgba(62,207,142,.22); border-color: var(--good); }
+  .opt.wrong { background: rgba(255,107,107,.22); border-color: var(--bad); }
+  .opt.dim { opacity: .4; }
   .result-big { text-align: center; margin: 10px 0 4px; }
   .result-big .v { font-size: 64px; font-weight: 800; color: var(--good); line-height: 1; }
   .result-big .k { color: var(--dim); }
@@ -77,11 +86,19 @@
     <div class="label">Deck</div>
     <div class="row" id="deckpick"></div>
 
-    <div class="label">Timing length</div>
-    <div class="row" id="durpick">
-      <button class="chip" data-dur="30">30s</button>
-      <button class="chip sel" data-dur="60">1 min</button>
-      <button class="chip" data-dur="120">2 min</button>
+    <div class="label">Mode</div>
+    <div class="row" id="modepick">
+      <button class="chip sel" data-mode="flash">Flashcards</button>
+      <button class="chip" data-mode="match">Match (multiple choice)</button>
+    </div>
+
+    <div id="durwrap">
+      <div class="label">Timing length</div>
+      <div class="row" id="durpick">
+        <button class="chip" data-dur="30">30s</button>
+        <button class="chip sel" data-dur="60">1 min</button>
+        <button class="chip" data-dur="120">2 min</button>
+      </div>
     </div>
 
     <div class="label">Direction</div>
@@ -92,18 +109,18 @@
 
     <div style="flex:1"></div>
 
-    <div class="label">Last session (this deck)</div>
+    <div class="label">Last flashcard session (this deck)</div>
     <div class="stat-grid">
       <div class="stat"><div class="v" id="last-correct">-</div><div class="k">corrects / min</div></div>
       <div class="stat"><div class="v" id="last-acc">-</div><div class="k">accuracy</div></div>
     </div>
 
     <div style="height:16px"></div>
-    <button class="big-btn" onclick="startRun()">Start timing</button>
+    <button class="big-btn" id="startbtn" onclick="startRun()">Start timing</button>
     <button class="big-btn ghost" style="margin-top:10px" onclick="show('history')">View progress</button>
   </section>
 
-  <!-- RUN -->
+  <!-- RUN (flashcards) -->
   <section id="run" class="screen">
     <div class="timerbar">
       <div class="timer" id="timer">1:00</div>
@@ -121,19 +138,30 @@
     <div class="flip-hint">Say the answer aloud, then tap the card to check.</div>
   </section>
 
+  <!-- MATCH (multiple choice) -->
+  <section id="match" class="screen">
+    <div class="timerbar">
+      <div class="counts" id="mcount">1 / 15</div>
+      <div class="counts">score <b class="c" id="mscore">0</b></div>
+    </div>
+    <div class="sample" id="sample">...</div>
+    <div class="options" id="options"></div>
+    <div class="flip-hint">Pick the match. Untimed - this is for learning, not charted.</div>
+  </section>
+
   <!-- RESULTS -->
   <section id="results" class="screen">
-    <h1>Timing complete</h1>
+    <h1 id="res-title">Timing complete</h1>
     <div class="result-big">
       <div class="v" id="res-cpm">0</div>
-      <div class="k">corrects per minute</div>
+      <div class="k" id="res-cpm-k">corrects per minute</div>
     </div>
     <div class="mini">
-      <div class="stat"><div class="v" id="res-epm">0</div><div class="k">errors / min</div></div>
-      <div class="stat"><div class="v" id="res-acc">0%</div><div class="k">accuracy</div></div>
-      <div class="stat"><div class="v" id="res-seen">0</div><div class="k">cards seen</div></div>
+      <div class="stat"><div class="v" id="res-epm">0</div><div class="k" id="res-epm-k">errors / min</div></div>
+      <div class="stat"><div class="v" id="res-acc">0%</div><div class="k" id="res-acc-k">accuracy</div></div>
+      <div class="stat"><div class="v" id="res-seen">0</div><div class="k" id="res-seen-k">cards seen</div></div>
     </div>
-    <div class="label">Aim: build toward ~30-50 corrects/min with near-zero errors.</div>
+    <div class="label" id="res-aim">Aim: build toward ~30-50 corrects/min with near-zero errors.</div>
     <div style="flex:1"></div>
     <button class="big-btn" onclick="startRun()">Run again</button>
     <button class="big-btn ghost" style="margin-top:10px" onclick="show('home')">Home</button>
@@ -143,11 +171,12 @@
   <section id="history" class="screen">
     <h1>Progress</h1>
     <div class="sub" id="hist-deck"></div>
-    <svg id="chart" viewBox="0 0 320 170" preserveAspectRatio="none"></svg>
+    <svg id="chart" style="width:100%;height:auto;background:var(--panel);border-radius:14px"></svg>
+    <div class="row" id="hist-legend" style="margin-top:10px"></div>
     <div class="label" id="hist-summary"></div>
     <div style="flex:1"></div>
     <button class="big-btn ghost" onclick="show('home')">Home</button>
-    <button class="danger-link" onclick="clearHistory()">Clear this deck's history</button>
+    <button class="danger-link" onclick="clearHistory()">Clear all history</button>
   </section>
 
 </div>
@@ -428,10 +457,12 @@ symbols: { name: "Symbols & Notation", cards: [
 };
 
 // =================== State ===================
-let deckId = "la", dur = 60, dir = "fb";
+let deckId = "la", dur = 60, dir = "fb", mode = "flash";
 let cards = [], order = [], idx = 0, correct = 0, errors = 0, flipped = false;
 let endAt = 0, ticker = null;
+let trials = [], matchIdx = 0, matchScore = 0, matchLocked = false;
 const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 
 // build deck picker
 const dp = $("deckpick");
@@ -449,12 +480,13 @@ dp.addEventListener("click", e=>{
   loadLast();
 });
 
-function show(id){
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-  $(id).classList.add("active");
-  if(id==="history") drawHistory();
-  if(id==="home") loadLast();
-}
+$("modepick").addEventListener("click", e=>{
+  const m = e.target.dataset.mode; if(!m) return;
+  mode = m;
+  [...$("modepick").children].forEach(c=>c.classList.toggle("sel", c===e.target));
+  $("durwrap").style.display = mode==="flash" ? "" : "none";
+  $("startbtn").textContent = mode==="flash" ? "Start timing" : "Start match round";
+});
 
 $("durpick").addEventListener("click", e=>{
   if(!e.target.dataset.dur) return;
@@ -467,31 +499,20 @@ $("dirpick").addEventListener("click", e=>{
   [...$("dirpick").children].forEach(c=>c.classList.toggle("sel", c===e.target));
 });
 
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+  if(id==="history") drawHistory();
+  if(id==="home") loadLast();
+}
+
 function shuffle(a){
   for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
   return a;
 }
 
-function startRun(){
-  cards = DECKS[deckId].cards;
-  order = shuffle(cards.map((_,i)=>i));
-  idx = 0; correct = 0; errors = 0;
-  $("rc").textContent = 0; $("re").textContent = 0;
-  show("run");
-  renderCard();
-  endAt = Date.now() + dur*1000;
-  tick();
-  clearInterval(ticker);
-  ticker = setInterval(tick, 200);
-}
-
-function tick(){
-  const left = Math.max(0, endAt - Date.now());
-  const s = Math.ceil(left/1000);
-  $("timer").textContent = Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
-  if(left<=0){ clearInterval(ticker); finish(); }
-}
-
+// ---- content helpers (work for text decks and curve decks) ----
+const isCurve = () => DECKS[deckId].type === "curve";
 function plot(card){
   const W=280,H=190,pad=10;
   const {fn,xmin,xmax,ymin,ymax}=card;
@@ -509,26 +530,44 @@ function plot(card){
   }
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:300px;height:auto;background:transparent">${axes}<path d="${d}" fill="none" stroke="#5b9cff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
+const frontHTML = card => isCurve() ? plot(card) : esc(card[0]);
+const backHTML  = card => isCurve() ? (esc(card.name) + (card.eq ? `<br><span style="color:#9aa0aa;font-size:16px">${esc(card.eq)}</span>` : "")) : esc(card[1]);
+const sampleHTML = card => dir==="fb" ? frontHTML(card) : backHTML(card);
+const answerHTML = card => dir==="fb" ? backHTML(card) : frontHTML(card);
 
+// =================== Flashcards mode ===================
+function startFlash(){
+  cards = DECKS[deckId].cards;
+  order = shuffle(cards.map((_,i)=>i));
+  idx = 0; correct = 0; errors = 0;
+  $("rc").textContent = 0; $("re").textContent = 0;
+  show("run");
+  renderCard();
+  endAt = Date.now() + dur*1000;
+  tick();
+  clearInterval(ticker);
+  ticker = setInterval(tick, 200);
+}
+function tick(){
+  const left = Math.max(0, endAt - Date.now());
+  const s = Math.ceil(left/1000);
+  $("timer").textContent = Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+  if(left<=0){ clearInterval(ticker); finishFlash(); }
+}
 function renderCard(){
   if(idx >= order.length){ order = shuffle(order); idx = 0; }
   const card = cards[order[idx]];
-  if(DECKS[deckId].type === "curve"){
-    const svg = plot(card);
-    const label = card.name + (card.eq ? `<br><span style="color:#9aa0aa;font-size:16px">${card.eq}</span>` : "");
-    $("front").innerHTML = dir==="fb" ? svg : label;
-    $("back").innerHTML  = dir==="fb" ? label : svg;
+  if(isCurve()){
+    $("front").innerHTML = dir==="fb" ? frontHTML(card) : backHTML(card);
+    $("back").innerHTML  = dir==="fb" ? backHTML(card) : frontHTML(card);
   } else {
-    const [front, back] = card;
-    $("front").textContent = dir==="fb" ? front : back;
-    $("back").textContent  = dir==="fb" ? back : front;
+    $("front").textContent = dir==="fb" ? card[0] : card[1];
+    $("back").textContent  = dir==="fb" ? card[1] : card[0];
   }
   flipped = false;
   $("card").classList.remove("flipped");
 }
-
 function flip(){ flipped = true; $("card").classList.add("flipped"); }
-
 function mark(ok){
   if(!flipped) flip();
   if(ok){ correct++; $("rc").textContent = correct; }
@@ -536,13 +575,15 @@ function mark(ok){
   idx++;
   renderCard();
 }
-
-function finish(){
+function finishFlash(){
   const mins = dur/60;
   const cpm = +(correct/mins).toFixed(1);
   const epm = +(errors/mins).toFixed(1);
   const seen = correct + errors;
   const acc = seen ? Math.round(100*correct/seen) : 0;
+  $("res-title").textContent = "Timing complete";
+  setResultLabels("corrects per minute","errors / min","accuracy","cards seen");
+  $("res-aim").textContent = "Aim: build toward ~30-50 corrects/min with near-zero errors.";
   $("res-cpm").textContent = cpm;
   $("res-epm").textContent = epm;
   $("res-acc").textContent = acc+"%";
@@ -551,11 +592,77 @@ function finish(){
   show("results");
 }
 
-// =================== Persistence (per deck) ===================
+// =================== Match-to-sample mode ===================
+function startMatch(){
+  cards = DECKS[deckId].cards;
+  const N = Math.min(15, cards.length);
+  trials = shuffle(cards.map((_,i)=>i)).slice(0, N);
+  matchIdx = 0; matchScore = 0; matchLocked = false;
+  $("mscore").textContent = 0;
+  show("match");
+  renderTrial();
+}
+function renderTrial(){
+  const correctIdx = trials[matchIdx];
+  const card = cards[correctIdx];
+  $("sample").innerHTML = sampleHTML(card);
+  $("mcount").textContent = (matchIdx+1) + " / " + trials.length;
+  const pool = shuffle(cards.map((_,i)=>i).filter(i=>i!==correctIdx)).slice(0,3);
+  const opts = shuffle([correctIdx, ...pool]);
+  const box = $("options"); box.innerHTML = "";
+  opts.forEach(ci=>{
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.dataset.correct = ci===correctIdx ? "1" : "";
+    b.innerHTML = answerHTML(cards[ci]);
+    b.onclick = () => choose(b);
+    box.appendChild(b);
+  });
+  matchLocked = false;
+}
+function choose(btn){
+  if(matchLocked) return;
+  matchLocked = true;
+  const ok = btn.dataset.correct === "1";
+  [...$("options").children].forEach(b=>{
+    if(b.dataset.correct==="1") b.classList.add("right");
+    else b.classList.add("dim");
+  });
+  if(ok){ matchScore++; }
+  else { btn.classList.remove("dim"); btn.classList.add("wrong"); }
+  $("mscore").textContent = matchScore;
+  setTimeout(()=>{
+    matchIdx++;
+    if(matchIdx >= trials.length) finishMatch();
+    else renderTrial();
+  }, ok ? 650 : 1300);
+}
+function finishMatch(){
+  const N = trials.length, score = matchScore;
+  const acc = N ? Math.round(100*score/N) : 0;
+  $("res-title").textContent = "Match round complete";
+  setResultLabels("percent correct","got right","trials","missed");
+  $("res-aim").textContent = "Match-to-sample practice (not charted). Switch to Flashcards to build fluency.";
+  $("res-cpm").textContent = acc+"%";
+  $("res-epm").textContent = score;
+  $("res-acc").textContent = N;
+  $("res-seen").textContent = N - score;
+  show("results");
+}
+
+function startRun(){ if(mode==="match") startMatch(); else startFlash(); }
+function setResultLabels(a,b,c,d){
+  $("res-cpm-k").textContent = a;
+  $("res-epm-k").textContent = b;
+  $("res-acc-k").textContent = c;
+  $("res-seen-k").textContent = d;
+}
+
+// =================== Persistence (flashcards only, per deck) ===================
 const keyFor = id => "safmeds_history_" + id;
 function getHistory(){ try { return JSON.parse(localStorage.getItem(keyFor(deckId))) || []; } catch(e){ return []; } }
 function saveSession(s){ const h = getHistory(); h.push(s); localStorage.setItem(keyFor(deckId), JSON.stringify(h)); }
-function clearHistory(){ if(confirm("Clear history for " + DECKS[deckId].name + "?")){ localStorage.removeItem(keyFor(deckId)); drawHistory(); } }
+function clearHistory(){ if(confirm("Clear ALL flashcard history across every deck?")){ Object.keys(DECKS).forEach(id=>localStorage.removeItem(keyFor(id))); drawHistory(); loadLast(); } }
 
 function loadLast(){
   const h = getHistory();
@@ -565,27 +672,56 @@ function loadLast(){
   $("last-acc").textContent = last.acc+"%";
 }
 
+const DECK_COLORS = {la:"#5b9cff", calc:"#3ecf8e", prob:"#e0b341", mcalc:"#c98bff", curves:"#ff8f5b", symbols:"#4fd0d6"};
 function drawHistory(){
-  $("hist-deck").textContent = DECKS[deckId].name + " - corrects/min (green), errors/min (red)";
-  const h = getHistory();
+  // aggregate flashcard sessions across every deck (deck inferred from its storage key)
+  let all = [];
+  Object.keys(DECKS).forEach(id=>{
+    let h; try { h = JSON.parse(localStorage.getItem(keyFor(id))) || []; } catch(e){ h = []; }
+    h.forEach(s=> all.push({t:s.t, cpm:s.cpm, epm:s.epm, deck:id}));
+  });
+  $("hist-deck").textContent = "Standard celeration chart: frequency per minute (log scale) by calendar day. Dots = corrects, red x = errors. All decks.";
   const svg = $("chart");
-  const W=320,H=170,pad=24;
-  if(!h.length){ svg.innerHTML = `<text x="160" y="85" fill="#9aa0aa" font-size="13" text-anchor="middle">No sessions yet</text>`; $("hist-summary").textContent=""; return; }
-  const maxY = Math.max(10, ...h.map(s=>Math.max(s.cpm, s.epm))) * 1.15;
-  const x = i => pad + (h.length===1 ? (W-2*pad)/2 : i*(W-2*pad)/(h.length-1));
-  const y = v => H-pad - v/maxY*(H-2*pad);
-  const series = (key,color) => {
-    const pts = h.map((s,i)=>`${x(i).toFixed(1)},${y(s[key]).toFixed(1)}`);
-    const dots = h.map((s,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(s[key]).toFixed(1)}" r="3" fill="${color}"/>`).join("");
-    return `<polyline points="${pts.join(" ")}" fill="none" stroke="${color}" stroke-width="2"/>${dots}`;
-  };
-  const grid = `<line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" stroke="#2c313c"/>`+
-               `<line x1="${pad}" y1="${pad}" x2="${pad}" y2="${H-pad}" stroke="#2c313c"/>`+
-               `<text x="${pad-4}" y="${pad+4}" fill="#9aa0aa" font-size="9" text-anchor="end">${Math.round(maxY)}</text>`+
-               `<text x="${pad-4}" y="${H-pad}" fill="#9aa0aa" font-size="9" text-anchor="end">0</text>`;
-  svg.innerHTML = grid + series("cpm","#3ecf8e") + series("epm","#ff6b6b");
-  const best = Math.max(...h.map(s=>s.cpm));
-  $("hist-summary").textContent = `${h.length} sessions  -  best ${best} corrects/min  -  latest ${h[h.length-1].cpm}`;
+  const W=340,H=230,L=34,R=12,T=12,B=26;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  if(!all.length){
+    svg.innerHTML = `<text x="${W/2}" y="${H/2}" fill="#9aa0aa" font-size="13" text-anchor="middle">No flashcard sessions yet</text>`;
+    $("hist-legend").innerHTML = ""; $("hist-summary").textContent = ""; return;
+  }
+  const yBot=0.1, logT=3, logB=-1;
+  const sy = v => T + (logT - Math.log10(Math.max(v, yBot))) / (logT-logB) * (H-T-B);
+  const dayOf = t => Math.floor(t/86400000);
+  const today = dayOf(Date.now());
+  const days = all.map(s=>dayOf(s.t));
+  let minD = Math.min(...days), maxD = Math.max(today, ...days);
+  if(maxD - minD < 27) maxD = minD + 27;
+  const sx = d => L + (d-minD)/(maxD-minD) * (W-L-R);
+  let g="";
+  [0.1,1,10,100,1000].forEach(v=>{
+    const yy = sy(v).toFixed(1);
+    g += `<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" stroke="#2c313c"/>`;
+    g += `<text x="${L-4}" y="${(parseFloat(yy)+3).toFixed(1)}" fill="#9aa0aa" font-size="9" text-anchor="end">${v}</text>`;
+  });
+  for(let d=minD; d<=maxD; d+=7){
+    const xx = sx(d).toFixed(1);
+    g += `<line x1="${xx}" y1="${T}" x2="${xx}" y2="${H-B}" stroke="#21252e"/>`;
+  }
+  const fmt = d => { const dt = new Date(d*86400000); return (dt.getUTCMonth()+1)+"/"+dt.getUTCDate(); };
+  g += `<text x="${L}" y="${H-8}" fill="#9aa0aa" font-size="9">${fmt(minD)}</text>`;
+  g += `<text x="${W-R}" y="${H-8}" fill="#9aa0aa" font-size="9" text-anchor="end">${fmt(maxD)}</text>`;
+  let pts="";
+  all.forEach(s=>{
+    const x = sx(dayOf(s.t));
+    if(s.cpm>0){ pts += `<circle cx="${x.toFixed(1)}" cy="${sy(s.cpm).toFixed(1)}" r="3.2" fill="${DECK_COLORS[s.deck]||'#5b9cff'}"/>`; }
+    if(s.epm>0){ const y=sy(s.epm); pts += `<path d="M${(x-3).toFixed(1)} ${(y-3).toFixed(1)} l6 6 M${(x+3).toFixed(1)} ${(y-3).toFixed(1)} l-6 6" stroke="#ff6b6b" stroke-width="1.5" fill="none"/>`; }
+  });
+  svg.innerHTML = g + pts;
+  const present = [...new Set(all.map(s=>s.deck))];
+  $("hist-legend").innerHTML = present.map(id=>
+    `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--dim);margin-right:4px"><span style="width:10px;height:10px;border-radius:50%;background:${DECK_COLORS[id]||'#5b9cff'};display:inline-block"></span>${DECKS[id].name}</span>`
+  ).join("") + `<span style="font-size:12px;color:var(--dim)">red &times; = errors</span>`;
+  const best = Math.max(...all.map(s=>s.cpm||0));
+  $("hist-summary").textContent = `${all.length} sessions across ${present.length} deck(s)  -  best ${best} corrects/min`;
 }
 
 loadLast();
