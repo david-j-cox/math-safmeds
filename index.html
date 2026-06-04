@@ -171,6 +171,7 @@
   <section id="history" class="screen">
     <h1>Progress</h1>
     <div class="sub" id="hist-deck"></div>
+    <div class="row" id="hist-filter" style="margin:4px 0 8px"></div>
     <svg id="chart" style="width:100%;height:auto;background:var(--panel);border-radius:14px"></svg>
     <div class="row" id="hist-legend" style="margin-top:10px"></div>
     <div class="label" id="hist-summary"></div>
@@ -673,14 +674,25 @@ function loadLast(){
 }
 
 const DECK_COLORS = {la:"#5b9cff", calc:"#3ecf8e", prob:"#e0b341", mcalc:"#c98bff", curves:"#ff8f5b", symbols:"#4fd0d6"};
+let histFilter = "all";
+function setHistFilter(f){ histFilter = f; drawHistory(); }
 function drawHistory(){
   // aggregate flashcard sessions across every deck (deck inferred from its storage key)
-  let all = [];
+  let allRaw = [];
   Object.keys(DECKS).forEach(id=>{
     let h; try { h = JSON.parse(localStorage.getItem(keyFor(id))) || []; } catch(e){ h = []; }
-    h.forEach(s=> all.push({t:s.t, cpm:s.cpm, epm:s.epm, deck:id}));
+    h.forEach(s=> allRaw.push({t:s.t, cpm:s.cpm, epm:s.epm, deck:id}));
   });
-  $("hist-deck").textContent = "Standard celeration chart: frequency per minute (log scale) by calendar day. Dots = corrects, red x = errors. All decks.";
+  const present = Object.keys(DECKS).filter(id => allRaw.some(s=>s.deck===id));
+  if(histFilter!=="all" && !present.includes(histFilter)) histFilter = "all";
+  // filter control: "All decks" + one chip per deck that has data
+  let chips = `<button class="chip${histFilter==="all"?" sel":""}" onclick="setHistFilter('all')">All decks</button>`;
+  present.forEach(id=>{
+    chips += `<button class="chip${histFilter===id?" sel":""}" onclick="setHistFilter('${id}')"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${DECK_COLORS[id]||'#5b9cff'};margin-right:5px;vertical-align:middle"></span>${DECKS[id].name}</button>`;
+  });
+  $("hist-filter").innerHTML = chips;
+  const all = histFilter==="all" ? allRaw : allRaw.filter(s=>s.deck===histFilter);
+  $("hist-deck").textContent = "Semilog celeration chart: frequency/min (log) by calendar day. Dot = corrects, x = errors, colored by deck.";
   const svg = $("chart");
   const W=340,H=230,L=34,R=12,T=12,B=26;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
@@ -711,17 +723,19 @@ function drawHistory(){
   g += `<text x="${W-R}" y="${H-8}" fill="#9aa0aa" font-size="9" text-anchor="end">${fmt(maxD)}</text>`;
   let pts="";
   all.forEach(s=>{
+    const c = DECK_COLORS[s.deck]||'#5b9cff';
     const x = sx(dayOf(s.t));
-    if(s.cpm>0){ pts += `<circle cx="${x.toFixed(1)}" cy="${sy(s.cpm).toFixed(1)}" r="3.2" fill="${DECK_COLORS[s.deck]||'#5b9cff'}"/>`; }
-    if(s.epm>0){ const y=sy(s.epm); pts += `<path d="M${(x-3).toFixed(1)} ${(y-3).toFixed(1)} l6 6 M${(x+3).toFixed(1)} ${(y-3).toFixed(1)} l-6 6" stroke="#ff6b6b" stroke-width="1.5" fill="none"/>`; }
+    if(s.cpm>0){ pts += `<circle cx="${x.toFixed(1)}" cy="${sy(s.cpm).toFixed(1)}" r="3.2" fill="${c}"/>`; }
+    if(s.epm>0){ const y=sy(s.epm); pts += `<path d="M${(x-3).toFixed(1)} ${(y-3).toFixed(1)} l6 6 M${(x+3).toFixed(1)} ${(y-3).toFixed(1)} l-6 6" stroke="${c}" stroke-width="1.5" fill="none"/>`; }
   });
   svg.innerHTML = g + pts;
-  const present = [...new Set(all.map(s=>s.deck))];
-  $("hist-legend").innerHTML = present.map(id=>
+  const legendDecks = histFilter==="all" ? present : [histFilter];
+  $("hist-legend").innerHTML = legendDecks.map(id=>
     `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--dim);margin-right:4px"><span style="width:10px;height:10px;border-radius:50%;background:${DECK_COLORS[id]||'#5b9cff'};display:inline-block"></span>${DECKS[id].name}</span>`
-  ).join("") + `<span style="font-size:12px;color:var(--dim)">red &times; = errors</span>`;
+  ).join("") + `<span style="font-size:12px;color:var(--dim)">dot = corrects, &times; = errors</span>`;
   const best = Math.max(...all.map(s=>s.cpm||0));
-  $("hist-summary").textContent = `${all.length} sessions across ${present.length} deck(s)  -  best ${best} corrects/min`;
+  const scope = histFilter==="all" ? `across ${present.length} deck(s)` : `(${DECKS[histFilter].name})`;
+  $("hist-summary").textContent = `${all.length} sessions ${scope}  -  best ${best} corrects/min`;
 }
 
 loadLast();
