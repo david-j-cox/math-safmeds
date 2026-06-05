@@ -152,7 +152,8 @@
     </div>
     <div class="sample" id="sample">...</div>
     <div class="options" id="options"></div>
-    <div class="flip-hint">Pick the match as fast as you can. Charted as rings.</div>
+    <button class="big-btn" id="mResume" style="display:none;margin-top:14px" onclick="resumeMatch()">Continue</button>
+    <div class="flip-hint" id="mHint">Pick the match as fast as you can. Charted as rings.</div>
   </section>
 
   <!-- RESULTS -->
@@ -683,7 +684,7 @@ let deckId = "la", dur = 60, dir = "fb", mode = "flash";
 let cards = [], order = [], idx = 0, correct = 0, errors = 0, flipped = false;
 let endAt = 0, ticker = null;
 let mOrder = [], mIdx = 0, matchScore = 0, matchErrors = 0, matchLocked = false, matchOver = false;
-let mEndAt = 0, mTicker = null, mTimeout = null;
+let mEndAt = 0, mTicker = null, mTimeout = null, mPausedLeft = 0;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 
@@ -841,6 +842,8 @@ function startMatch(){
   mOrder = shuffle(cards.map((_,i)=>i));
   mIdx = 0; matchScore = 0; matchErrors = 0; matchLocked = false; matchOver = false;
   $("mscore").textContent = 0; $("merr").textContent = 0;
+  $("mResume").style.display = "none";
+  $("mHint").textContent = "Pick the match as fast as you can. Charted as rings.";
   show("match");
   renderTrial();
   mEndAt = Date.now() + dur*1000;
@@ -882,14 +885,37 @@ function choose(btn){
     if(b.dataset.correct==="1") b.classList.add("right");
     else b.classList.add("dim");
   });
-  if(ok){ matchScore++; $("mscore").textContent = matchScore; }
-  else { btn.classList.remove("dim"); btn.classList.add("wrong"); matchErrors++; $("merr").textContent = matchErrors; }
+  if(ok){
+    matchScore++; $("mscore").textContent = matchScore;
+    clearTimeout(mTimeout);
+    mTimeout = setTimeout(()=>{
+      if(matchOver) return;
+      mIdx++;
+      renderTrial();
+    }, 400);
+  } else {
+    btn.classList.remove("dim"); btn.classList.add("wrong");
+    matchErrors++; $("merr").textContent = matchErrors;
+    pauseMatch(); // freeze the clock so the correct answer can be studied
+  }
+}
+function pauseMatch(){
+  clearInterval(mTicker); mTicker = null;
   clearTimeout(mTimeout);
-  mTimeout = setTimeout(()=>{
-    if(matchOver) return;
-    mIdx++;
-    renderTrial();
-  }, ok ? 400 : 850);
+  mPausedLeft = Math.max(0, mEndAt - Date.now());
+  $("mResume").style.display = "";
+  $("mHint").textContent = "Timer paused - review the correct answer (green), then continue.";
+}
+function resumeMatch(){
+  if(matchOver) return;
+  $("mResume").style.display = "none";
+  $("mHint").textContent = "Pick the match as fast as you can. Charted as rings.";
+  mEndAt = Date.now() + mPausedLeft;     // resume the clock from where it stopped
+  clearInterval(mTicker);
+  mTicker = setInterval(tickMatch, 200);
+  mIdx++;
+  renderTrial();
+  tickMatch();
 }
 function finishMatch(){
   if(matchOver) return;
