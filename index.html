@@ -59,8 +59,8 @@
   /* match-to-sample */
   .sample { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 22px; text-align: center; font-size: 21px; font-weight: 600; min-height: 130px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
   .sample svg { width: 100%; max-width: 280px; height: auto; background: transparent; }
-  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .opt { background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 16px; font-size: 16px; min-height: 70px; text-align: center; display: flex; align-items: center; justify-content: center; line-height: 1.3; }
+  .options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: stretch; }
+  .opt { background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 16px; font-size: 16px; min-height: 70px; text-align: center; display: flex; align-items: center; justify-content: center; line-height: 1.3; min-width: 0; max-width: 100%; overflow-x: auto; overflow-y: hidden; }
   .opt svg { width: 100%; max-width: 130px; height: auto; background: transparent; }
   .opt.right { background: rgba(62,207,142,.22); border-color: var(--good); }
   .opt.wrong { background: rgba(255,107,107,.22); border-color: var(--bad); }
@@ -73,9 +73,12 @@
   svg { width: 100%; height: 170px; background: var(--panel); border-radius: 14px; }
   .ghost { background: var(--panel2); color: var(--ink); }
   .danger-link { color: var(--bad); background: none; font-size: 13px; text-decoration: underline; padding: 6px; }
-  /* KaTeX: inherit the surrounding text color/size so equations match each face */
-  .katex { font-size: 1.04em; color: inherit; }
+  /* KaTeX: inherit color/size, and keep wide equations from breaking the mobile layout */
+  .katex { font-size: 1.02em; color: inherit; max-width: 100%; }
   .card .answer .katex, .opt .katex { color: inherit; }
+  .opt .katex, .sample .katex { font-size: 0.95em; }
+  /* contain long math/text inside its own box instead of pushing past the screen edge */
+  .card .face, .card .answer, .sample { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
